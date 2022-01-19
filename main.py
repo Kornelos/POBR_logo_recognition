@@ -1,28 +1,10 @@
 import cv2
 import numpy as np
 
-
-def low_pass(img):
-    kernel = np.array([
-        [1, 1, 1],
-        [1, 1, 1],
-        [1, 1, 1]
-    ])
-    kernel = kernel / sum(kernel)
-
-    for i_x, x in enumerate(img):
-        for i_y, y in enumerate(x):
-            if not np.array_equal([0, 0, 0], y):
-                img[i_x, i_y] = np.array([255, 255, 255])  # todo: binarize image
-
-
 def image_convolution(matrix, kernel):
     # assuming kernel is symmetric and odd
     k_size = len(kernel)
     m_height, m_width, channels = matrix.shape
-    # padded = []
-    # for i in range(channels):
-    #     padded.append(np.pad(matrix[:, :, i], (k_size - 1, k_size - 1)))
 
     # iterates through matrix, applies kernel, and sums
     output = np.zeros(matrix.shape, dtype=np.uint8)
@@ -31,7 +13,6 @@ def image_convolution(matrix, kernel):
             for ch in range(channels):
                 output[i][j][ch] = np.sum(matrix[:, :, ch][i:k_size + i, j:k_size + j] * kernel, dtype=np.uint8)
 
-    # output = np.array(output).reshape((m_height, m_width))
     return output
 
 
@@ -48,6 +29,7 @@ def detect_logo():
     img2 = image_convolution(img, kernel)
     cv2.imshow("before", img)
     cv2.imshow("result", img2)
+
     if False:
         cv2.filter2D(img, -1, kernel, img)
         # v2.GaussianBlur(img, (3, 3), 0, img)
