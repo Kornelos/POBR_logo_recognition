@@ -1,6 +1,13 @@
 import cv2
 import numpy as np
 from numba import njit
+from queue import Queue
+
+from typing import Tuple, List
+
+from detected import Detected
+
+PIXEL_COUNT_MIN = 500
 
 
 @njit
@@ -11,8 +18,8 @@ def image_convolution(matrix: np.ndarray, kernel: np.ndarray):
 
     # iterates through matrix, applies kernel, and sums
     output = np.zeros(matrix.shape, dtype=np.uint8)
-    for i in range(2, m_height-2):
-        for j in range(2, m_width-2):
+    for i in range(2, m_height - 2):
+        for j in range(2, m_width - 2):
             for ch in range(channels):
                 output[i][j][ch] = np.sum(matrix[:, :, ch][i:k_size + i, j:k_size + j] * kernel, dtype=np.uint8)
 
@@ -52,8 +59,82 @@ def _bgr2hsv_pixel_fast(bgr_pixel: np.ndarray) -> np.ndarray:
     return hsv
 
 
+@njit
+def apply_threshold(matrix: np.ndarray, hue_value: np.uint8) -> np.ndarray:
+    m_height, m_width, channels = matrix.shape
+    output = np.zeros(matrix.shape, dtype=np.uint8)  # todo: change to 1D
+    for i in range(m_height):
+        for j in range(m_width):
+            output[i][j] = _threshold_in_range(matrix[i][j])
+    return output
+
+
+@njit
+def _threshold_in_range(pixel: np.ndarray) -> np.uint8:
+    # lower_red = np.array([160, 50, 50])
+    # upper_red = np.array([180, 255, 255])
+    # lower_red2 = np.array([0, 70, 50])
+    # upper_red2 = np.array([10, 255, 255])
+    if (160 <= pixel[0] <= 180) and (50 <= pixel[1] <= 255) and (50 <= pixel[2] <= 255) or \
+            (0 <= pixel[0] <= 10) and (70 <= pixel[1] <= 255) and (70 <= pixel[2] <= 255):
+        return np.uint(255)
+    else:
+        return np.uint(0)
+
+
+def flood_fill(matrix: np.ndarray) -> List[Detected]:
+    m_height, m_width, _ = matrix.shape
+    # output = np.zeros(matrix.shape, dtype=np.uint8)
+    used = np.zeros((m_height, m_width), dtype=bool)
+
+    detected = []
+    for i in range(m_height):
+        for j in range(m_width):
+            if not used[i][j]:
+                if not np.array_equal(matrix[i][j], np.array([0, 0, 0])):
+                    # new element detected
+                    d = Detected(matrix, used, (i, j))
+                    if d.pixel_count > PIXEL_COUNT_MIN:
+                        detected.append(d)
+    return detected
+
+
+# def extract(matrix: np.ndarray, used: np.ndarray, idx: Tuple[int, int]) -> Detected:
+#     q = Queue(-1)
+#     q.put(idx)
+#     segment = np.zeros(used.shape, dtype=bool)
+#     m_height, m_width, _ = matrix.shape
+#     pixel_count = 0
+#     while not q.empty():
+#         i, j = q.get()
+#         if not used[i][j]:
+#             used[i][j] = True
+#             if not np.array_equal(matrix[i][j], np.array([0, 0, 0])):
+#                 pixel_count += 1
+#                 segment[i][j] = True
+#
+#                 # check neighbours
+#                 if j - 1 >= 0:
+#                     q.put((i, j - 1))
+#                 if i - 1 >= 0:
+#                     q.put((i - 1, j))
+#                 if j + 1 < m_width:
+#                     q.put((i, j + 1))
+#                 if i + 1 < m_height:
+#                     q.put((i + 1, j))
+#     return Detected(segment, pixel_count)
+
+
+# def find_index(matrix, used) -> tuple:
+#     m_height, m_width, _ = matrix.shape
+#     for i in range(m_height):
+#         for j in range(m_width):
+#             used[i][j] = True
+#             if not np.array_equal(matrix[i][j], np.array([0, 0, 0])):
+#                 return i, j
+
 def detect_logo():
-    img = cv2.imread("./images/img2.jpeg")
+    img = cv2.imread("./images/img1.jpeg")
     # img = img[100:300, 100:300]  # for development only
     # blur
     kernel = np.array([
@@ -66,15 +147,21 @@ def detect_logo():
 
     # to hsv
     img2_cv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    img2 = bgr2hsv(img)
+    img2 = bgr2hsv(img2)
 
+    print(_bgr2hsv_pixel_fast(np.array([201, 38, 53])))
+    # threshold
+    img2 = apply_threshold(img2, np.uint8(171))
 
+    # todo: closing (dilitate & erode)
 
-    # cv2.imshow("before", img)
-    # cv2.imshow("result", img2)
-    stacked = np.hstack((img2_cv, img2))
-    cv2.imshow("result", stacked)
+    # flood fill & boxing
+    detected = flood_fill(img2)
 
+    for d in detected[:10]:
+        i_max, j_max, i_min, j_min = d.bounding_box
+        cv2.rectangle(img, (j_min, i_min), (j_max, i_max), color=(0, 255, 0))
+    cv2.imshow("result", img)
 
     if False:
         cv2.filter2D(img, -1, kernel, img)
