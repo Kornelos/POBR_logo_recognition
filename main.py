@@ -19,49 +19,42 @@ def image_convolution(matrix: np.ndarray, kernel: np.ndarray):
     return output
 
 
+@njit
 def bgr2hsv(matrix: np.ndarray) -> np.ndarray:
     m_height, m_width, channels = matrix.shape
-    output = np.zeros(matrix.shape, dtype=np.double)
+    output = np.zeros(matrix.shape, dtype=np.uint8)
     for i in range(m_height):
         for j in range(m_width):
-            output[i][j] = _bgr2hsv_pixel(matrix[i][j])
+            output[i][j] = _bgr2hsv_pixel_fast(matrix[i][j])
     return output
 
 
-def _bgr2hsv_pixel(bgr_pixel: np.ndarray) -> np.ndarray:
+@njit
+def _bgr2hsv_pixel_fast(bgr_pixel: np.ndarray) -> np.ndarray:
     # For HSV, hue range is [0,179], saturation range is [0,255], and value range is [0,255].
-    bgr = np.array(bgr_pixel,dtype=np.double)
-    hsv = np.zeros(3, dtype=np.double)
-    min_val = np.min(bgr)
-    max_val = np.max(bgr)
-    hsv[2] = max_val
-    delta = max_val - min_val
-    if delta < 0.00001:
-        hsv[1] = 0
-        hsv[0] = 0 # undefined, maybe
+    hsv = np.zeros(3, dtype=np.uint8)
+    bgr_min = np.min(bgr_pixel)
+    bgr_max = np.max(bgr_pixel)
+    hsv[2] = bgr_max
+    if hsv[2] == 0:
         return hsv
-    if max_val > 0.0:
-        hsv[1] = (delta / max_val)
-    else:
+    hsv[1] = 255 * (bgr_max - bgr_min) / hsv[2]
+    if hsv[1] == 0:
         return hsv
-    if bgr[2] >= max_val:
-        hsv[0] = (bgr[1] - bgr[0]) / delta   # ( in.g - in.b ) / delta #// between yellow & magenta
-    elif bgr[1] >= max_val:
-        hsv[0] = 2.0 + (bgr[0] - bgr[2]) / delta # ( in.b - in.r ) / delta; #// between cyan & yellow
+    delta = bgr_max - bgr_min
+    if bgr_max == bgr_pixel[2]:
+        hsv[0] = 0 + 43 * (np.int16(bgr_pixel[1]) - np.int16(bgr_pixel[0])) / delta
+    elif bgr_max == bgr_pixel[1]:
+        hsv[0] = 85 + 43 * (np.int16(bgr_pixel[0]) - np.int16(bgr_pixel[2])) / delta
     else:
-        hsv[0] = 4.0 + (bgr[2] - bgr[1]) / delta # ( in.r - in.g ) / delta; #// between magenta & cyan
-
-    hsv[0] *= 60.0  # degrees
-
-    if hsv[0] < 0.0:
-        hsv[0] += 360.0
-
+        hsv[0] = 171 + 43 * (np.int16(bgr_pixel[2]) - np.int16(bgr_pixel[1])) / delta
+    # todo: now h is range [0, 255]
     return hsv
 
 
 def detect_logo():
     img = cv2.imread("./images/img2.jpeg")
-    img = img[100:300, 100:300]  # for development only
+    # img = img[100:300, 100:300]  # for development only
     # blur
     kernel = np.array([
         [1, 1, 1],
@@ -79,7 +72,7 @@ def detect_logo():
 
     # cv2.imshow("before", img)
     # cv2.imshow("result", img2)
-    stacked = np.hstack((img, img2))
+    stacked = np.hstack((img2_cv, img2))
     cv2.imshow("result", stacked)
 
 
