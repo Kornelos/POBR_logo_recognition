@@ -1,11 +1,10 @@
 import cv2
 import numpy as np
 from numba import njit
-from queue import Queue
 
-from typing import Tuple, List
+from typing import List
 
-from detected import Detected
+from detected import detect_object
 
 PIXEL_COUNT_MIN = 500
 
@@ -82,10 +81,11 @@ def _threshold_in_range(pixel: np.ndarray) -> np.uint8:
         return np.uint(0)
 
 
-def flood_fill(matrix: np.ndarray) -> List[Detected]:
+@njit
+def flood_fill(matrix: np.ndarray) -> List:
     m_height, m_width, _ = matrix.shape
     # output = np.zeros(matrix.shape, dtype=np.uint8)
-    used = np.zeros((m_height, m_width), dtype=bool)
+    used = np.zeros((m_height, m_width), dtype=np.uint8)
 
     detected = []
     for i in range(m_height):
@@ -93,45 +93,11 @@ def flood_fill(matrix: np.ndarray) -> List[Detected]:
             if not used[i][j]:
                 if not np.array_equal(matrix[i][j], np.array([0, 0, 0])):
                     # new element detected
-                    d = Detected(matrix, used, (i, j))
-                    if d.pixel_count > PIXEL_COUNT_MIN:
+                    d = detect_object(matrix, used, (i, j))
+                    if d[1] > PIXEL_COUNT_MIN:
                         detected.append(d)
     return detected
 
-
-# def extract(matrix: np.ndarray, used: np.ndarray, idx: Tuple[int, int]) -> Detected:
-#     q = Queue(-1)
-#     q.put(idx)
-#     segment = np.zeros(used.shape, dtype=bool)
-#     m_height, m_width, _ = matrix.shape
-#     pixel_count = 0
-#     while not q.empty():
-#         i, j = q.get()
-#         if not used[i][j]:
-#             used[i][j] = True
-#             if not np.array_equal(matrix[i][j], np.array([0, 0, 0])):
-#                 pixel_count += 1
-#                 segment[i][j] = True
-#
-#                 # check neighbours
-#                 if j - 1 >= 0:
-#                     q.put((i, j - 1))
-#                 if i - 1 >= 0:
-#                     q.put((i - 1, j))
-#                 if j + 1 < m_width:
-#                     q.put((i, j + 1))
-#                 if i + 1 < m_height:
-#                     q.put((i + 1, j))
-#     return Detected(segment, pixel_count)
-
-
-# def find_index(matrix, used) -> tuple:
-#     m_height, m_width, _ = matrix.shape
-#     for i in range(m_height):
-#         for j in range(m_width):
-#             used[i][j] = True
-#             if not np.array_equal(matrix[i][j], np.array([0, 0, 0])):
-#                 return i, j
 
 def detect_logo():
     img = cv2.imread("./images/img1.jpeg")
@@ -159,7 +125,7 @@ def detect_logo():
     detected = flood_fill(img2)
 
     for d in detected[:10]:
-        i_max, j_max, i_min, j_min = d.bounding_box
+        i_max, j_max, i_min, j_min = d[2]
         cv2.rectangle(img, (j_min, i_min), (j_max, i_max), color=(0, 255, 0))
     cv2.imshow("result", img)
 
