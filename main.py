@@ -51,17 +51,18 @@ def detect_logo(path, should_close):
         p1, p2 = d[2]  # (j_min, i_min), (j_max, i_max)
         hm, should_merge = is_hm(matrix=d[0], pixel_count=d[1])
         if hm and not should_merge:  # or True:
-            cv2.rectangle(img, p1, p2, color=(0, 255, 0))
+            rectangle(img, p1, p2, color=(0, 255, 0), thickness=3)
         if hm and should_merge:
             if merge_queue:
                 # merge and print
                 p1_prev, p2_prev = merge_queue.pop()
+
                 p1, p2 = merge_boxes(p1_prev, p2_prev, p1, p2)
-                rectangle(img, p1, p2, color=(0, 255, 0))
+                rectangle(img, p1, p2, color=(0, 255, 0), thickness=3)
             else:
                 merge_queue.append((p1, p2))
     if merge_queue:
-        rectangle(img, p1, p2, color=(0, 255, 0))
+        rectangle(img, p1, p2, color=(0, 255, 0), thickness=3)
 
     if SHOW_THRESHOLD:
         imshow(path, np.hstack((img, img2)))
