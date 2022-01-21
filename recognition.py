@@ -80,7 +80,8 @@ def calculate_M7(matrix: np.ndarray) -> float:
     return (M_20 * M_02 - pow(M_11, 2)) / pow(m00, 4)
 
 
-def is_hm(matrix: np.ndarray, pixel_count: int) -> bool:
+def is_hm(matrix: np.ndarray, pixel_count: int) -> Tuple[bool, bool]:
+    """:returns (is_logo, should_merge) should be merged if its h or m"""
     circ = calculate_circumference(matrix)
     area = pixel_count
     w3 = calculate_w3(circ, area)
@@ -88,15 +89,16 @@ def is_hm(matrix: np.ndarray, pixel_count: int) -> bool:
     M7 = calculate_M7(matrix)
     print(f"w3: {w3}  M1: {M1} M7: {M7}")
     if 3.5 > w3 > 2 and 0.18 > M1 > 0.17 and 0.008 > M7 > 0.007 or \
+        2 > w3 > 1.9 and 0.18 > M1 > 0.17 and 0.008 > M7 > 0.007 or \
         (2.2 > w3 > 1.7 and 0.17 > M1 > 0.16 and 0.007 > M7 > 0.0068):  # separate H M
         print(f"found h or m: w3: {w3}  M1: {M1} M7: {M7}")
-        return True
+        return True, True
     elif (3.6 > w3 > 3.4 and 0.17 > M1 > 0.16 and 0.0075 > M7 > 0.007) or \
             (2 > w3 > 1.9 and 0.17 > M1 > 0.16 and 0.007 > M7 > 0.0068):  # merged HM
         print(f"found hm: w3: {w3}  M1: {M1} M7: {M7}")
-        return True
+        return True, False
     else:
-        return False
+        return False, False
 # example img
 # H: w3: 2.476006191789203  M1: 0.17507523069129763 M7: 0.007662793675624868
 # M: w3: 3.271185161794998  M1: 0.1788113658425772 M7: 0.00799330237645096
