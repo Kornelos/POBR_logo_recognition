@@ -64,7 +64,7 @@ def detect_logo(path, should_close):
         cv2.rectangle(img, p1, p2, color=(0, 255, 0))
 
     if SHOW_THRESHOLD:
-        cv2.imshow("result", np.hstack((img, img2)))
+        cv2.imshow(path, np.hstack((img, img2)))
     else:
         cv2.imshow(path, img)
 
@@ -72,7 +72,7 @@ def detect_logo(path, should_close):
 if __name__ == '__main__':
     logo_path = "./images/hm-logo.jpeg"
     # print(_bgr2hsv_pixel_fast(np.array([201, 38, 53]))) # experimenting with hsv ranges
-    # detect_logo("./images/img1.jpeg", False)
+    detect_logo("./images/img1.jpeg", False)
     detect_logo("./images/img2.jpeg", False)
-    # detect_logo("./images/img3.jpeg", True)
+    detect_logo("./images/img3.jpeg", True)
     cv2.waitKey()
