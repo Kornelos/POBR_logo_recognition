@@ -3,7 +3,7 @@ from typing import Tuple
 import numpy as np
 from cv2 import imshow, rectangle, waitKey, imread
 
-from converters import bgr2hsv, _bgr2hsv_pixel_fast
+from converters import bgr2hsv
 from detection import flood_fill
 from processing import image_convolution, apply_threshold, dilate, erode
 from recognition import is_hm
@@ -12,7 +12,6 @@ SHOW_THRESHOLD = False
 
 
 def merge_boxes(p0, p1, p2, p3) -> Tuple[Tuple[int, int], Tuple[int, int]]:
-    # (j_min, i_min), (j_max, i_max)
     j_min = min(p0[0], p1[0], p2[0], p3[0])
     j_max = max(p0[0], p1[0], p2[0], p3[0])
     i_min = min(p0[1], p1[1], p2[1], p3[1])
@@ -48,9 +47,9 @@ def detect_logo(path, should_close):
     merge_queue = []
     p1, p2 = (0, 0)
     for idx, d in enumerate(detected):
-        p1, p2 = d[2]  # (j_min, i_min), (j_max, i_max)
+        p1, p2 = d[2]
         hm, should_merge = is_hm(matrix=d[0], pixel_count=d[1])
-        if hm and not should_merge:  # or True:
+        if hm and not should_merge:
             rectangle(img, p1, p2, color=(0, 255, 0), thickness=3)
         if hm and should_merge:
             if merge_queue:
@@ -72,7 +71,6 @@ def detect_logo(path, should_close):
 
 if __name__ == '__main__':
     logo_path = "./images/hm-logo.jpeg"
-    # print(_bgr2hsv_pixel_fast(np.array([201, 38, 53]))) # experimenting with hsv ranges
     detect_logo("./images/img1.jpeg", False)
     detect_logo("./images/img2.jpeg", False)
     detect_logo("./images/img3.jpeg", True)

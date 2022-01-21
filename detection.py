@@ -12,7 +12,6 @@ def flood_fill(matrix: np.ndarray) -> List[Tuple[
     """:returns List[Tuple[segment, pixel_count, bounding_box(segment)]]"""
 
     m_height, m_width, _ = matrix.shape
-    # output = np.zeros(matrix.shape, dtype=np.uint8)
     used = np.zeros((m_height, m_width), dtype=np.uint8)
 
     detected = []
