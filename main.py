@@ -8,7 +8,7 @@ from detection import flood_fill
 from processing import image_convolution, apply_threshold, dilate, erode
 from recognition import is_hm
 
-SHOW_THRESHOLD = True
+SHOW_THRESHOLD = False
 
 
 def merge_boxes(p0, p1, p2, p3) -> Tuple[Tuple[int, int], Tuple[int, int]]:
