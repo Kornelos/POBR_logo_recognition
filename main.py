@@ -1,7 +1,7 @@
 from typing import Tuple
 
-import cv2
 import numpy as np
+from cv2 import imshow, rectangle, waitKey, imread
 
 from converters import bgr2hsv, _bgr2hsv_pixel_fast
 from detection import flood_fill
@@ -21,7 +21,7 @@ def merge_boxes(p0, p1, p2, p3) -> Tuple[Tuple[int, int], Tuple[int, int]]:
 
 
 def detect_logo(path, should_close):
-    img = cv2.imread(path)
+    img = imread(path)
 
     # blur
     kernel = np.array([
@@ -57,16 +57,16 @@ def detect_logo(path, should_close):
                 # merge and print
                 p1_prev, p2_prev = merge_queue.pop()
                 p1, p2 = merge_boxes(p1_prev, p2_prev, p1, p2)
-                cv2.rectangle(img, p1, p2, color=(0, 255, 0))
+                rectangle(img, p1, p2, color=(0, 255, 0))
             else:
                 merge_queue.append((p1, p2))
     if merge_queue:
-        cv2.rectangle(img, p1, p2, color=(0, 255, 0))
+        rectangle(img, p1, p2, color=(0, 255, 0))
 
     if SHOW_THRESHOLD:
-        cv2.imshow(path, np.hstack((img, img2)))
+        imshow(path, np.hstack((img, img2)))
     else:
-        cv2.imshow(path, img)
+        imshow(path, img)
 
 
 if __name__ == '__main__':
@@ -75,4 +75,4 @@ if __name__ == '__main__':
     detect_logo("./images/img1.jpeg", False)
     detect_logo("./images/img2.jpeg", False)
     detect_logo("./images/img3.jpeg", True)
-    cv2.waitKey()
+    waitKey()
