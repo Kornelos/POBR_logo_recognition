@@ -34,8 +34,8 @@ def _threshold_in_range(pixel: np.ndarray) -> np.uint8:
     # upper_red = np.array([180, 255, 255])
     # lower_red2 = np.array([0, 70, 50])
     # upper_red2 = np.array([10, 255, 255])
-    if (160 <= pixel[0] <= 180) and (50 <= pixel[1] <= 255) and (50 <= pixel[2] <= 255) or \
-            (0 <= pixel[0] <= 10) and (70 <= pixel[1] <= 255) and (70 <= pixel[2] <= 255):
+    if (160 <= pixel[0] <= 180) and (100 <= pixel[1] <= 255) and (100 <= pixel[2] <= 255) or \
+            (0 <= pixel[0] <= 10) and (100 <= pixel[1] <= 255) and (100 <= pixel[2] <= 255):
         return np.uint(255)
     else:
         return np.uint(0)

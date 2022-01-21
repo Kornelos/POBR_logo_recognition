@@ -4,8 +4,7 @@ import numpy as np
 from converters import bgr2hsv
 from detection import flood_fill
 from processing import image_convolution, apply_threshold
-
-PIXEL_COUNT_MIN = 1000
+from recognition import is_hm
 
 
 def detect_logo(path):
@@ -30,18 +29,22 @@ def detect_logo(path):
     img2 = apply_threshold(img2, np.uint8(171))
 
     # todo: closing (dilitate & erode) not necessary
-    # kernel = np.ones((3, 3), np.uint8)
-    # cv2.dilate(img2,kernel,img2)
+    kernel = np.ones((3, 3), np.uint8)
+    cv2.dilate(img2, kernel, img2)
+    cv2.erode(img2, kernel, img2)
 
     # flood fill & boxing
     detected = flood_fill(img2)
-
-    for d in detected:
+    hm = []
+    for idx, d in enumerate(detected):
         p1, p2 = d[2]  # (j_min, i_min), (j_max, i_max)
-        cv2.rectangle(img, p1, p2, color=(0, 255, 0))
-    cv2.imshow("result", img)
+        if is_hm(matrix=d[0], pixel_count=d[1]):  # or True:
+            cv2.rectangle(img, p1, p2, color=(0, 255, 0))
+    cv2.imshow("result", np.hstack((img, img2)))
 
 
 if __name__ == '__main__':
+    logo_path = "./images/hm-logo.jpeg"
+
     detect_logo("./images/img5.jpeg")
     cv2.waitKey()
