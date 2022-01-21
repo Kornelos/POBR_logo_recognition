@@ -1,12 +1,33 @@
-from typing import Tuple
+from typing import Tuple, List
 
 import numpy as np
 from numba import njit
 
+PIXEL_COUNT_MIN = 1000
+
+
+@njit
+def flood_fill(matrix: np.ndarray) -> List[Tuple[
+                np.ndarray, int, Tuple[Tuple[int, int], Tuple[int, int]]]]:
+    m_height, m_width, _ = matrix.shape
+    # output = np.zeros(matrix.shape, dtype=np.uint8)
+    used = np.zeros((m_height, m_width), dtype=np.uint8)
+
+    detected = []
+    for i in range(m_height):
+        for j in range(m_width):
+            if not used[i][j]:
+                if not np.array_equal(matrix[i][j], np.array([0, 0, 0])):
+                    # new element detected
+                    d = detect_object(matrix, used, (i, j))
+                    if d[1] > PIXEL_COUNT_MIN:
+                        detected.append(d)
+    return detected
+
 
 @njit
 def detect_object(matrix: np.ndarray, used: np.ndarray, idx: Tuple[int, int]) -> Tuple[
-    np.ndarray, int, Tuple[int, int, int, int]]:
+                    np.ndarray, int, Tuple[Tuple[int, int], Tuple[int, int]]]:
     q = []
     q.append(idx)
     segment = np.zeros(used.shape, dtype=np.uint8)
@@ -33,7 +54,7 @@ def detect_object(matrix: np.ndarray, used: np.ndarray, idx: Tuple[int, int]) ->
 
 
 @njit
-def _create_bbox(segment) -> Tuple[int, int, int, int]:
+def _create_bbox(segment) -> Tuple[Tuple[int, int], Tuple[int, int]]:
     m_height, m_width = segment.shape
     i_min = m_height
     j_min = m_width
@@ -50,4 +71,4 @@ def _create_bbox(segment) -> Tuple[int, int, int, int]:
                     i_max = i
                 if j > j_max:
                     j_max = j
-    return i_max, j_max, i_min, j_min
+    return (j_min, i_min), (j_max, i_max)
