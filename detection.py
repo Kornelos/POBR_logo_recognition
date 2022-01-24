@@ -3,7 +3,7 @@ from typing import Tuple, List
 import numpy as np
 from numba import njit
 
-PIXEL_COUNT_MIN = 1000
+from configuration import PIXEL_COUNT_MIN
 
 
 @njit

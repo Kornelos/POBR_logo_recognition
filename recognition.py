@@ -4,6 +4,9 @@ from typing import Tuple
 import numpy as np
 from numba import njit
 
+from configuration import W3_LETTER_MAX, W3_LETTER_MIN, M1_LETTER_MIN, M1_LETTER_MAX, M7_LETTER_MIN, M7_LETTER_MAX, \
+    W3_LOGO_MAX, W3_LOGO_MIN, M1_LOGO_MAX, M1_LOGO_MIN, M7_LOGO_MAX, M7_LOGO_MIN
+
 
 @njit
 def calculate_w3(circumference: int, area: int) -> float:
@@ -85,10 +88,10 @@ def is_hm(matrix: np.ndarray, pixel_count: int) -> Tuple[bool, bool]:
     M1 = calculate_M1(matrix)
     M7 = calculate_M7(matrix)
     # print(f"w3: {w3}  M1: {M1} M7: {M7}")
-    if 2 > w3 > 1.9 and 0.17 > M1 > 0.16 and 0.007 > M7 > 0.0068:  # merged HM
+    if W3_LETTER_MAX > w3 > W3_LETTER_MIN and M1_LETTER_MAX > M1 > M1_LETTER_MIN and M7_LETTER_MAX > M7 > M7_LETTER_MIN:  # merged HM
         print(f"found hm: w3: {w3}  M1: {M1} M7: {M7}")
         return True, False
-    elif 3.51 > w3 > 1.76 and 0.179 > M1 > 0.1670 and 0.008 > M7 > 0.00695:  # separate H M
+    elif W3_LOGO_MAX > w3 > W3_LOGO_MIN and M1_LOGO_MAX > M1 > M1_LOGO_MIN and M7_LOGO_MAX > M7 > M7_LOGO_MIN:  # separate H M
         print(f"found h or m: w3: {w3}  M1: {M1} M7: {M7}")
         return True, True
     else:

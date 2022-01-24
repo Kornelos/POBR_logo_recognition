@@ -3,6 +3,7 @@ from typing import Tuple
 import numpy as np
 from cv2 import imshow, rectangle, waitKey, imread
 
+from configuration import BOUNDING_BOX_COLOR, BOUNDING_BOX_THICKNESS
 from converters import bgr2hsv
 from detection import flood_fill
 from processing import image_convolution, apply_threshold, dilate, erode
@@ -46,22 +47,23 @@ def detect_logo(path, should_close):
     detected = flood_fill(img2)
     merge_queue = []
     p1, p2 = (0, 0)
+
     for idx, d in enumerate(detected):
         p1, p2 = d[2]
         hm, should_merge = is_hm(matrix=d[0], pixel_count=d[1])
         if hm and not should_merge:
-            rectangle(img, p1, p2, color=(0, 255, 0), thickness=3)
+            rectangle(img, p1, p2, color=BOUNDING_BOX_COLOR, thickness=BOUNDING_BOX_THICKNESS)
         if hm and should_merge:
             if merge_queue:
                 # merge and print
                 p1_prev, p2_prev = merge_queue.pop()
 
                 p1, p2 = merge_boxes(p1_prev, p2_prev, p1, p2)
-                rectangle(img, p1, p2, color=(0, 255, 0), thickness=3)
+                rectangle(img, p1, p2, color=BOUNDING_BOX_COLOR, thickness=BOUNDING_BOX_THICKNESS)
             else:
                 merge_queue.append((p1, p2))
     if merge_queue:
-        rectangle(img, p1, p2, color=(0, 255, 0), thickness=3)
+        rectangle(img, p1, p2, color=BOUNDING_BOX_COLOR, thickness=BOUNDING_BOX_THICKNESS)
 
     if SHOW_THRESHOLD:
         imshow(path, np.hstack((img, img2)))

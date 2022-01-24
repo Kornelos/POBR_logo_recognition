@@ -31,5 +31,4 @@ def _bgr2hsv_pixel_fast(bgr_pixel: np.ndarray) -> np.ndarray:
         hsv[0] = 85 + 43 * (np.int16(bgr_pixel[0]) - np.int16(bgr_pixel[2])) / delta
     else:
         hsv[0] = 171 + 43 * (np.int16(bgr_pixel[2]) - np.int16(bgr_pixel[1])) / delta
-    # todo: now h is range [0, 255]
     return hsv
